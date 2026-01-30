@@ -6,9 +6,11 @@ about:
     - icon: linkedin
       text: LinkedIn
       href: https://www.linkedin.com/in/eduardo-arag%C3%B3n-rueda-1609a8397/
+      target: _blank
     - icon: github
       text: Github
       href: https://github.com/edus1807
+      target: _blank
 ---
 
 ### Perfil Profesional

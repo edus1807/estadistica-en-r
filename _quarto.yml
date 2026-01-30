@@ -14,18 +14,24 @@ website:
     right:
       - icon: github
         href: https://github.com/edus1807
+        target: _blank
       - icon: linkedin
         href: https://www.linkedin.com/in/eduardo-arag%C3%B3n-rueda-1609a8397/
+        target: _blank
       - text: Algunas webs
         menu: 
           - href: https://masteres.ugr.es/tecnicas-cuantitativas-empresas/
             text: Web del Máster
+            target: _blank
           - href: https://r-charts.com/es/
             text: Rcharts 
+            target: _blank
           - href: https://seeing-theory.brown.edu/
             text: Seeing Theory
+            target: _blank
           - href: https://www.r-bloggers.com/
             text: R-bloggers
+            target: _blank
   
 format:
   html:

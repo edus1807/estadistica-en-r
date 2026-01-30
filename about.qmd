@@ -7,9 +7,11 @@ about:
     - icon: linkedin
       text: LinkedIn
       href: https://www.linkedin.com/in/eduardo-arag%C3%B3n-rueda-1609a8397/
+      target: _blank
     - icon: github
       text: Github
       href: https://github.com/edus1807
+      target: _blank
 ---
 
 ¡Hola! Soy Eduardo Aragón Rueda, graduado en Estadística por la Universidad de Granada y actualmente me encuentro realizando el Máster en Técnicas Cuantitativas en Gestión Empresarial en la misma universidad.
