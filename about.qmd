@@ -1,0 +1,21 @@
+---
+title: "Sobre mí"
+image: perfil.jpg
+about:
+  template: trestles
+  links:
+    - icon: linkedin
+      text: LinkedIn
+      href: https://www.linkedin.com/in/eduardo-arag%C3%B3n-rueda-1609a8397/
+    - icon: github
+      text: Github
+      href: https://github.com/edus1807
+---
+
+¡Hola! Soy Eduardo Aragón Rueda, graduado en Estadística por la Universidad de Granada y actualmente me encuentro realizando el Máster en Técnicas Cuantitativas en Gestión Empresarial en la misma universidad.
+
+Este blog está realizado para una de las asignaturas de este máster, aunque gracias a su utilidad se irán introduciendo más proyectos que pueda ir realizando en un futuro y sean de interés.
+
+En él encontraremos herramientas para realizar diversas técnicas estadísticas, como estadística descriptiva, inferencia o regresión lineal, mediante el lenguaje de programación R debido a su gran utilidad en este sector. Los contenidos que se muestran en el blog se realizarán sobre datos que puedan ser conseguidos desde R o desde mi Github, con el fin de que puedan replicarse sin ningún inconveniente.
+
+¡Muchas gracias por la visita!

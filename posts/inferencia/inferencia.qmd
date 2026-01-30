@@ -1,0 +1,154 @@
+---
+title: "Inferencia"
+description: 
+  Esperanza de vida e Índice de Desarrollo Humano  
+author: "Eduardo Aragón"
+date: "2026-01-16"
+categories: [Inferencia, ANOVA, Tukey, Kruskal-Wallis,Mann-Whitney,ggplot2]
+image: "inferencia.jpg"
+---
+
+A continuación se presenta una actividad de inferencia sobre un conjunto de datos, los cuales se encuentran depurados y listos para usar desde mi directorio de Github, aunque podremos usarlos directamente desde la consola de R, como veremos más adelante.
+
+Los datos con los que vamos a trabajar han sido obtenidos del Instituto Vasco de Estadística-Eustat y tratan sobre el Índice de Desarrollo Humano (IDH) para 193 países, pudiendo ver el formato original en el siguiente enlace: [EUSTAT](https://www.eustat.eus/elementos/ele0013500/ti_indice-de-desarrollo-humano-por-indicadores-segun-paises-2019/tbl0013566_c.html)
+
+Respecto a la base de datos disponible en Eustat, nuestro archivo contiene una variable más relacionada con el nivel de desarrollo humano en lugar del propio índice. Eustat presenta en sus datos los países ordenados en función de si tienen un IDH muy alto, alto, medio y bajo. A partir de esta clasificación, se ha creado una variable cualitativa ordinal que representa a los países en función de dichas categorías.
+
+Podemos trabajar con estos datos de la siguiente manera, además de ver las variables.
+
+```{r}
+datos<-read.table("https://raw.githubusercontent.com/edus1807/Archivos_Quarto/refs/heads/main/renta_paises.txt",header = T,sep=";")
+names(datos)
+attach(datos)
+```
+
+El nombre de las variables es bastante claro respecto a lo que representa cada una de ellas, indicando solo que la variable `Desarrollo_humano` es la que ha sido creada por nosotros. También podemos ver como se encuentra organizado el propio fichero y los niveles que tiene la variable creada, mediante el siguiente código:
+
+```{r}
+head(datos)
+levels(as.factor(Desarrollo_humano))
+```
+
+A pesar de tener tantas variables, en este post solo nos centraremos en dos ellas, en la citada anteriormente `Desarrollo_humano` y en `Esperanza_de_vida`, puesto que nuestro objetivo será comprobar si la esperanza de vida puede considerarse igual en países con un distinto IDH. Para ello lo lógico sería pensar en un ANOVA, pues se trata de un caso de inferencia con más de dos poblaciones.
+
+Por tanto, la variable asociada a la esperanza de vida será nuestra variable dependiente, mientras que el factor `Desarrollo_humano` es la variable que define los grupos.
+
+# Análisis gráfico
+
+Antes de realizar la inferencia en si misma, podría ser útil ver como se comportan los datos en las cuatro categorías mediante un *box-plot*.
+
+```{r}
+library(ggplot2)
+
+ggplot(datos, aes(x = Desarrollo_humano, y = Esperanza_de_vida, fill = Desarrollo_humano)) + 
+  stat_boxplot(geom = "errorbar",
+               width = 0.25) + 
+  geom_boxplot()
+```
+
+Podemos ver, antes de aplicar las técnicas que veremos más adelante, que sí parecen existir diferencias en la esperanza de vida en función del nivel de desarrollo humano. Concretamente vemos que aquellos países que tienen un IDH muy alto tienen más esperanza de vida que el resto, siguiendo un orden bastante descendiente en la esperanza cada vez que el IDH reduce su categoría. También se aprecia un valor atípico tanto para el desarrollo alto como medio.
+
+# ANOVA
+
+Una vez analizado el *box-plot*, es el momento de comprobar que se verifiquen las hipótesis básicas de este tipo de modelos.
+
+Lo primero sería comprobar la independencia de las observaciones. En este caso vamos a asumir que los datos son independientes al tratarse de unidades nacionales distintas, sin entrar en debate de si un país depende de las características de sus vecinos, puesto se trata de un simple ejemplo.
+
+La independencia de las observaciones se traduce a su vez en que los datos son aleatorios. Dicha aleatoriedad se podría comprobar mediante un test de rachas, pero en este caso no se considera pertinente. Los datos se encuentran ordenados en función de su IDH, por lo que seguro que dicho test va a detectar un patrón no aleatorio, rechazando así la aleatoriedad, lo cual no es un reflejo de la naturaleza de nuestros datos.
+
+Pasamos a estudiar la homocedasticidad o igualdad de varianzas, puesto que para que se pueda usar el ANOVA la varianza en cada uno de los grupos debe ser significativamente igual. Para comprobarlo podemos plantear el siguiente contraste de hipótesis: $$
+\begin{cases}
+H_0: \sigma^2_\text{Muy Alto}=\sigma^2_\text{Alto}=\sigma^2_\text{Medio}=\sigma^2_\text{Bajo} \\
+H_1: \sigma^2_\text{Muy Alto}\neq\sigma^2_\text{Alto}\neq\sigma^2_\text{Medio}\neq\sigma^2_\text{Bajo}
+\end{cases}
+$$ Este contraste puede ser resuelto mediante el test de Levene, siendo la función que permite su uso `leveneTest`, la cual se encuentra dentro de la librería `car`. Para poder usarla es necesario previamente realizar el modelo ANOVA mediante `aov`.
+
+```{r}
+anova<-aov(Esperanza_de_vida ~ Desarrollo_humano, data = datos)
+require(car)
+leveneTest(anova,center=mean)
+```
+
+Obtenemos que el p-valor=0.8722 es mayor que un nivel de significación $\alpha$=0.05, por lo que no tenemos evidencias estadísticas para rechazar la hipótesis nula anterior. Por tanto, podemos considerar las varianzas iguales con una significación del 5%.
+
+Por último, nos queda verificar si se cumple el supuesto de normalidad, donde los datos de cada grupo deben seguir de manera aproximada dicha distribución. Esto se puede comprobar de manera analítica mediante el test de Shapiro-Wilks o Kolmogorov-Smirnov (con la corrección de Lilliefors pues se trata de normalidad) o de manera visual con algún gráfico como un QQ-plot.
+
+El uso de estos test suele medirse en función del tamaño de la muestra, siendo recomendado el uso de Shapiro-Wilks con tamaños menores de 50 unidades y K-S-Lilliefors en caso contrario. Los tamaños de cada nivel son:
+
+```{r}
+by(datos$Esperanza_de_vida,datos$Desarrollo_humano,length)
+```
+
+Igualmente por comodidad podemos usar ambos en cada nivel y comparar resultados.
+
+```{r}
+library("nortest")
+by(datos$Esperanza_de_vida,datos$Desarrollo_humano,lillie.test)
+by(datos$Esperanza_de_vida,datos$Desarrollo_humano,shapiro.test)
+```
+
+Vemos que con ambos test, el p-valor asociado al nivel de IDH muy alto es menor que un nivel de significación $\alpha$=0.05, por lo que tendríamos evidencias estadísticas para rechazar la normalidad en ese grupo. Lo vemos visualmente también:
+
+```{r}
+ggplot(datos, aes(sample = Esperanza_de_vida)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~Desarrollo_humano) +
+  labs(title = "Gráfico Q-Q de Esperanza de vida por Desarrollo humano")
+```
+
+Vemos que en `MUY ALTO`, a partir del valor 0 del eje de abscisas los valores se alejan de la diagonal teórica formando una especie de curva sobre ella. Esto es claramente un indicio de falta de normalidad en dicho nivel como pudimos comprobar anteriormente.
+
+Ante esta situación se pueden valorar dos posibles opciones. Una es continuar empleando el ANOVA pues, aunque la normalidad no se verifica en uno de los niveles del factor, es una prueba bastante robusta a la falta de la misma cuando el tamaño de la muestra es grande (`MUY ALTO` tenía 74 países) y además, se verifica la homocedasticidad.
+
+Sin embargo, si somos más rigurosos otra opción sería el uso de un enfoque no paramétrico, empleando el test de Kruskal-Wallis pues uno de los supuestos no se verifica.
+
+En consecuencia, se aplicarán ambos procedimientos (ANOVA y Kruskal–Wallis) con el objetivo de comprobar la robustez de los resultados, observándose que las conclusiones obtenidas son consistentes entre ambos enfoques.
+
+Se plantea el contraste de hipótesis de igualdad de medias para el ANOVA y se muestra su salida en R:
+
+$$
+  \begin{cases}
+H_0: \mu_\text{Muy Alto}=\mu_\text{Alto}=\mu_\text{Medio}=\mu_\text{Bajo}\\
+H_1: \mu_\text{Muy Alto}\neq\mu_\text{Alto}\neq\mu_\text{Medio}\neq\mu_\text{Bajo}
+\end{cases}
+$$
+
+```{r}
+summary(anova)
+```
+
+Obtenemos que el p-valor es menor que 0.05, por lo que tendríamos evidencias estadísticas para rechazar que las medias sean iguales. En ese caso habría que comprobar entre que niveles existen esas diferencias aplicando un test de comparaciones múltiples como Tukey.
+
+```{r}
+TukeyHSD(anova)
+```
+
+En todas las comparaciones se obtiene un p-valor significativo, pues este es menor a cualquier nivel de significación arbitrario. Esto se traduce en que todos los niveles son significativamente distintos entre sí. Por poner un ejemplo, podemos decir que los países con IDH muy alto presentan 6.7 años más de esperanza de vida que aquellos con IDH alto, mientras que con el resto de resultados podríamos decir que a medida que aumenta el IDH se produce un aumento de la esperanza de vida.
+
+# Kruskal-Wallis
+
+Como se indicó anteriormente, puesto que la normalidad de uno de los niveles no se cumplía, una opción sería analizar las diferencias mediante un enfoque no paramétrico, empleando en este caso el test de Kruskal-Wallis. Planteamos el contraste en función de las medianas: $$
+  \begin{cases}
+H_0: Med(\text{Muy alto})= Med(\text{Alto})=Med(\text{Medio})= Med(\text{Bajo}) \\
+H_1:  Med(\text{Muy alto})\neq Med(\text{Alto})\neq Med(\text{Medio})\neq Med(\text{Bajo})
+\end{cases}
+$$
+
+Para resolverlo aplicamos el siguiente código:
+
+```{r}
+kruskal.test(Esperanza_de_vida ~ Desarrollo_humano, data = datos)
+```
+
+Obtenemos que el p-valor es menor que 0.05, por lo que tendríamos evidencias estadísticas para rechazar que las medianas sean iguales. En ese caso habría que comprobar entre que niveles existen esas diferencias aplicando un test como Mann-Whitney con la corrección de Bonferroni.
+
+```{r}
+pairwise.wilcox.test(Esperanza_de_vida,Desarrollo_humano,p.adjust.method = "bonferroni")
+```
+
+Vemos que todos los p-valores son menores que 0.05, por lo que podemos decir que existen diferencias significativas entre todos los niveles del IDH en función de la esperanza de vida.
+
+# Conclusiones
+
+Por tanto, independientemente del enfoque, tomado obtenemos que existen diferencias significativas entre los niveles del Índice de Desarrollo Humano en función de la esperanza de vida, siendo esta cada vez mayor a medida que aumenta el propio IDH.

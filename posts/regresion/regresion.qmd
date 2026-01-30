@@ -1,0 +1,217 @@
+---
+title: "Regresión lineal múltiple"
+description: 
+  Árboles y regresión
+author: "Eduardo Aragón"
+date: "2026-01-28"
+categories: [Regresión, Múltiple,Multicolinealidad,Normalidad,Homocedasticidad]
+image: "regresion.jpg"
+---
+
+En este post vamos a trabajar con uno de los datasets que viene en R base, pues nos va a permitir realizar un caso de regresión lineal múltiple. Para ello vamos a usar el conjunto de datos `trees` el cual contiene las mediciones del diámetro, la altura y el volumen de la madera para 31 árboles de cereza negra que han sido talados. Empezamos cargando los datos y viendo las variables que podemos encontrar.
+
+```{r}
+data(trees)
+names(trees)
+```
+
+Por tanto, observamos que tenemos 3 variables con las que vamos a trabajar.
+
+-   `Girth`: Diámetro del árbol en pulgadas. Será nuestra variable dependiente.
+
+-   `Height`: Altura del árbol en pies.
+
+-   `Volume`: Volumen de la madera en pies cúbicos.
+
+Podemos ver como están definidos los datos:
+
+```{r}
+head(trees)
+```
+
+Un paso importante es verificar si la base de datos tiene datos faltantes. Una manera sencilla de comprobarlo es sumando los posibles elementos `NA` que tenga la propia base, por lo que si la suma sale 0 no habrá valores de este tipo.
+
+```{r}
+sum(is.na(trees))
+```
+
+Por tanto, vemos que no hay datos faltantes. Por comodidad, trabajaremos con las variables después de usar `attach`, y como no hay valores faltantes no hace falta guardar la base original en otro objeto por si lo necesitáramos más adelante.
+
+```{r}
+attach(trees)
+```
+
+# Regresión lineal múltiple
+
+Para obtener la estimación del modelo lineal de regresión hacemos uso de la función `lm` y mostramos sus resultados.
+
+```{r}
+modelo <- lm(Volume ~ Girth + Height, data = trees)
+summary(modelo)
+```
+
+En la salida de `summary` obtenemos la estimación de los coeficientes del modelo en la columna `Estimate`, siendo cada uno de ellos significativos al 5%, pues sus p-valores que podemos encontrar en la columna `Pr(>|t|)` son todos menores que 0.05. También obtenemos otras medidas de interés como que $R^2$=0.948, por lo que el 94.8% del diámetro del árbol es explicado tanto por la altura como por el volumen de la madera.
+
+Una vez obtenido el modelo es el momento de ver si se verifican las hipótesis asociadas al mismo.
+
+# Hipótesis básicas del modelo
+
+Dentro de las hipótesis del modelo vamos a estudiar si existe multicolinealidad entre las variables, si existe normalidad al estudiar los residuos y si la varianza es constante para los errores (homocedasticidad). En este caso no se estudia la autocorrelación, pues no se trata de datos temporales.
+
+## Multicolinealidad
+
+El estudio de la multicolinealidad (que las variables estén fuertemente correlacionadas entre sí) lo vamos a hacer de diferentes maneras. Empezamos observando la propia matriz de correlaciones.
+
+```{r}
+X = cbind(Girth,Height)
+cor(X)
+```
+
+Vemos que las dos variables explicativas tienen una correlación cercana a 0.52, por lo que al ser dicha correlación menor a 0.7, como normalmente se suele indicar en teoría, podemos decir que dicha relación no es fuerte, que es justo lo que andamos buscando. Otra manera sería calculando el determinante de dicha matriz, donde al estar más próximo su valor a 1 es buen indicio de que la correlación no es fuerte.
+
+```{r}
+det(cor(X))
+```
+
+Otro elemento a tener en cuenta es el factor de inflación de la varianza (VIF), el cual indica el incremento de la varianza estimada del coeficiente de regresión de una variable explicativa como consecuencia de la colinealidad con las demás variables. Para obtenerla se usa la orden `vif` del paquete `car`.
+
+```{r,message=FALSE}
+library(car)
+vif(modelo)
+```
+
+Como ambos valores son menores que 5, podemos decir que hay multicolinealidad baja o aceptable, por lo que seguiremos sin problema.
+
+Por último, vamos a estudiar el Número de Condición. Para ello podemos hacer uso de la función `CNs` de la librería `multiColl`.
+
+```{r}
+library("multiColl")
+cte = array(1,length(Volume))
+CNs(cbind(cte,X))
+```
+
+Al usar el Número de Condición, debemos comprobar si los valores son mayores que 30, pues eso implicaría un caso de multicolinealidad no esencial preocupante. En este caso, cuando no incluimos la constante dicho valor es cercano a 10, pero al incluirlo aumenta notablemente la colinealidad, pues ese valor es mayor que 30.
+
+A continuación se presenta una manera de poder corregir este inconveniente, que no es más que restar a cada una de sus variables su propia media. Se puede comprobar que ahora el Número de Condición, con constante o sin ella, es menor que 2 lo que es un claro indicio de no multicolinealidad.
+
+```{r}
+Girth_c <- Girth-mean(Girth)
+Height_c <- Height-mean(Height)
+X_centrado <- cbind(Girth_c,Height_c)
+
+X_final <- cbind(1, X_centrado)
+CNs(X_final) 
+```
+
+Por otro lado, podría ser interesante comparar el primer modelo con uno que tenga las variables centradas.
+
+```{r,message=FALSE}
+library("memisc")
+modelo_c <- lm(Volume ~ Girth_c + Height_c)
+mtable(modelo,modelo_c)
+```
+
+Vemos que el único valor que cambia es el asociado a la constante. Mientras que la interpretación de los coeficientes es la misma que en el modelo sin centrar, ahora cuando ambas variables independientes valgan su media, el volumen esperado de un árbol sera 30.171 pies cúbicos. Visto esto, a partir de ahora vamos a usar el modelo centrado.
+
+## Normalidad
+
+El siguiente supuesto que vamos a probar es el de normalidad. Para ello empleamos, sobre los residuos del modelo centrado, los test de Shapiro-Wilks y Kolmogorov-Smirnov-Lilliefors.
+
+```{r}
+shapiro.test(residuals(modelo_c))
+```
+
+```{r}
+library("nortest")
+lillie.test(residuals(modelo_c))
+```
+
+Mediante ambos test obtenemos un p-valor superior a 0.05, por lo que no tendríamos evidencias estadísticas para rechazar la hipótesis nula de normalidad.
+
+También podríamos observar como se ajustan los residuos a la línea teórica de un QQ-Plot. En este caso, vemos que la gran mayoría se ajustan bien, aunque es cierto, que en el extremo superior derecho existen ciertos valores más altos de lo que se espera. Sin embargo, el rechazo de los test anteriores era muy claro, por lo que decimos que los residuos son normales.
+
+```{r}
+qqnorm(residuals(modelo_c))
+qqline(residuals(modelo_c))
+```
+
+## Homocedasticidad
+
+Para comprobar que exista homocedasticidad vamos a hacer uso de una serie de test que nos permitan verificarla. Podríamos plantear el siguiente contraste de hipótesis: $$
+\begin{cases}
+H_0:\text{Existe homocedasticidad}\\
+H_1:\text{Existe heterocedasticidad}
+\end{cases}
+$$
+
+Test de White:
+
+```{r,message=FALSE}
+library(skedastic)
+white(modelo_c)
+```
+
+Test de Breusch-Pagan:
+
+```{r}
+library(lmtest)
+bptest(modelo_c)
+```
+
+Test de Goldfeld-Quandt:
+
+```{r}
+gqtest(modelo_c, fraction=1/3, order.by=Girth_c) 
+gqtest(modelo_c, fraction=1/3, order.by=Height_c) 
+```
+
+Los distintos test nos dan conclusiones totalmente distintas. Por un lado el test de Breusch-Pagan tiene un p-valor superior a 0.05, por lo que es el único que no rechaza la homocedasticidad. Los test restantes rechazan ambos $H_0$ en el contraste anterior por lo que podríamos decir que hay un problema de heterocedasticidad. Además, el test de Goldfeld-Quandt rechaza igualmente si los datos se ordenan por cualquiera de las variables explicativas.
+
+Por tanto, decimos que hay un problema de heterocedasticidad. Ante tal situación, podríamos aplicar una corrección de heterocedasticidad dando más peso a alguna de estas variables, pero no se obtienen mejorías.
+
+Por ello, vamos a plantear un nuevo modelo donde vamos a transformar la variable asociada al volumen mediante logaritmos.
+
+# Modelo de regresión con variable dependiente logarítmica
+
+Creamos el nuevo modelo mediante `lm`.
+
+```{r}
+modelo_l <- lm(log(Volume) ~ Girth_c + Height_c)
+summary(modelo_l)
+```
+
+Obtenemos que todos los parámetros son significativamente distintos de cero, pues los p-valores son claramente menores que cualquier nivel de significación arbitrario. Por tanto, consideramos este modelo a falta de ser validado.
+
+En este caso pasamos directamente a la verificación de la normalidad y homocedasticidad. No tiene sentido volver a estudiar la multicolinealidad pues es el mismo proceso que hicimos anteriormente cuando decidimos trabajar con las variables centradas, ya que estudiamos la matriz de coeficientes y sigue siendo la misma.
+
+## Normalidad
+
+Aplicamos una vez más tanto Shapiro-Wilks como K-S-Lilliefors.
+
+```{r}
+shapiro.test(residuals(modelo_l))
+lillie.test(residuals(modelo_l))
+```
+
+En ambos casos tenemos un p-valor superior a 0.05, por lo que no tenemos evidencias para rechazar la normalidad.
+
+## Homocedasticidad
+
+Aplicamos los test de White, Breusch-Pagan y Goldfeld-Quandt.
+
+```{r}
+white(modelo_l)
+bptest(modelo_l)
+gqtest(modelo_l, fraction=1/3, order.by=Girth_c) 
+gqtest(modelo_l, fraction=1/3, order.by=Height_c) 
+```
+
+Ahora así obtenemos un p-valor superior a 0.05 con cada uno de los test, por lo que no tendríamos evidencias para rechazar la hipótesis nula de homocedasticidad.
+
+Por tanto, como este último modelo verifica todas las hipótesis asociadas, lo consideramos como el modelo a elegir. De este modelo podemos decir:
+
+-   `Intercept`: El valor esperado de `log(Volume)` cuando las variables explicativas están centradas es 3.272732.
+
+-   `Girth_c`: Por cada unidad de aumento en esta variable, se espera que `Volume` aumente aproximadamente un 15.64% ($e^{0.1453}$-1=0.1563864).
+
+-   `Height_c`: Por cada unidad de aumento en esta variable, `Volume` se espera que aumente aproximadamente un 1.65% ($e^{0.016385}$-1=0.01651997).

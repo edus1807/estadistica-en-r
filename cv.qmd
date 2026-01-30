@@ -1,0 +1,64 @@
+---
+title: "Curriculum Vitae"
+about:
+  template: solana
+  links:
+    - icon: linkedin
+      text: LinkedIn
+      href: https://www.linkedin.com/in/eduardo-arag%C3%B3n-rueda-1609a8397/
+    - icon: github
+      text: Github
+      href: https://github.com/edus1807
+    - icon: file-pdf
+      text: Versión PDF
+      href: files/CV_quarto.pdf
+      target: _blank
+---
+
+### Perfil Profesional
+
+Estadístico con formación sólida en análisis de datos y modelado cuantitativo, capaz de transformar información compleja en conclusiones claras y útiles para la toma de decisiones.
+
+### Formación
+
+-   **Máster en Técnicas Cuantitativas en Gestión Empresarial** <br> Universidad de Granada 2025-Presente (en curso)
+
+-   **Grado en Estadística** <br> Universidad de Granada 2021-2025
+
+-   **Inglés: B1** <br> Cambridge English: Preliminary (PET) 2018
+
+### Habilidades
+
+-   Software y herramientas: R, Rstudio, SPSS, Python, Stata, Excel.
+
+-   Análisis de datos y técnicas estadísticas: inferencia estadística, modelos lineales, ANOVA, series temporales, visualización de datos.
+
+-   Interpretación y comunicación de resultados.
+
+### Proyectos Académicos de Interés
+
+**Trabajo de Fin de Grado: Análisis de la Varianza con medidas repetidas \| 2024-2025**
+
+-   Estudio teórico del ANOVA con medidas repetidas y aplicación práctica sobre datos reales de memorias RRAM (industria de semiconductores).
+
+-   Análisis del comportamiento de la intensidad de corriente al fijar el voltaje suministrado y aplicar un número determinado de pulsos en intervalos regulares.
+
+**Análisis de una serie temporal sobre nacimientos mensuales en Andalucía \| 2024**
+
+-   Análisis de datos del INE correspondientes al período 2012–2022 para estudiar la evolución de los nacimientos en Andalucía.
+
+<!-- -->
+
+-   Modelización y predicción de la serie temporal para estimar los valores del año siguiente.
+
+**Análisis de una encuesta sobre percepción de la ciencia y la tecnología (basada en el CIS) \| 2023**
+
+-   Replicación parcial de un cuestionario del CIS para evaluar actitudes hacia la ciencia y la tecnología mediante Google Forms.
+
+-   Limpieza, procesamiento e imputación de datos, aplicando técnicas estadísticas para identificar tendencias y relaciones entre variables sociodemográficas y nivel de interés científico.
+
+**Análisis de la satisfacción de clientes de una aerolínea \| 2024**
+
+-   Evaluación de la existencia de asociaciones entre la satisfacción y el resto de variables, utilizando un dataset público de Kaggle.
+
+-   Análisis bidimensional y tridimensional de datos independientes y dependientes mediante tablas de contingencia.

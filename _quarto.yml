@@ -1,0 +1,43 @@
+project:
+  type: website
+
+lang: es
+
+website:
+  title: "Eduardo Aragon"
+  favicon: "logo.jpg"
+  navbar:
+    left: 
+      - about.qmd
+      - cv.qmd
+    right:
+      - icon: github
+        href: https://github.com/edus1807
+      - icon: linkedin
+        href: https://www.linkedin.com/in/eduardo-arag%C3%B3n-rueda-1609a8397/
+      - text: Algunas webs
+        menu: 
+          - href: https://masteres.ugr.es/tecnicas-cuantitativas-empresas/
+            text: Web del Máster
+          - href: https://r-charts.com/es/
+            text: Rcharts 
+          - href: https://seeing-theory.brown.edu/
+            text: Seeing Theory
+          - href: https://www.r-bloggers.com/
+            text: R-bloggers
+
+resources:
+  - files/CV_quarto.pdf
+  
+format:
+  html:
+    toc: true
+    toc-location: right
+    toc-depth: 3
+    theme:
+      - cyborg
+      - brand
+    css: styles.css
+
+editor: visual
+
