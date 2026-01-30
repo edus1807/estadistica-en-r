@@ -9,10 +9,6 @@ about:
     - icon: github
       text: Github
       href: https://github.com/edus1807
-    - icon: file-pdf
-      text: Versión PDF
-      href: files/CV_quarto.pdf
-      target: _blank
 ---
 
 ### Perfil Profesional

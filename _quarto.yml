@@ -1,5 +1,6 @@
 project:
   type: website
+  output-dir: docs
 
 lang: es
 
@@ -25,9 +26,6 @@ website:
             text: Seeing Theory
           - href: https://www.r-bloggers.com/
             text: R-bloggers
-
-resources:
-  - files/CV_quarto.pdf
   
 format:
   html:
